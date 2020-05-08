@@ -1,22 +1,33 @@
-# Aadhaar Voting
+# Microsoft Codefundo Competititon 2019
 Aadhaar Based voting system using blockchain technology
-Project implemented as part of Rajasthan Hackathron
+Project implemented as part Microsoft Codefundo Competititon
 
-## Description
+## Information
+* ![](https://github.com/raghavaggarwal99/Blockchain/screenshot/img1.PNG)
 
-* The authority must login first with the provided session ID.
+If you notice, every client (browser) communicates with it’s own instance of the application. There is no central server to which all clients connect to. This means, every person who wants to interact with a dapp (Decentralized Application) will need a full copy of the blockchain running on their computer/phone etc. That means, before you can use an application, you have to download the entire blockchain and then start using the application. This might sound ridiculous at first but it has the advantage of not relying on a single central server which might disappear tomorrow.
+
+Now, what exactly is this blockchain? It has:
+1. **Database** : Every few transactions that occur in the Ethereum network are packaged in to blocks and each block is linked to the next block. This linked series of blocks which holds all the transaction data is the blockchain. If we go back to the eBay example, every transaction between buyers and sellers, whether it is a sale, refund or dispute would all be recorded on the blockchain and is available for everyone to see. To make sure all the nodes in the network have same copy of the data and to insure no invalid data gets written to this database, Ethereum uses an algorithm called Proof of Work (http://ethereum.stackexchange.com/questions/14/what-proof-of-work-function-does-ethereum-use)
+2. **Code** : The database aspect of blockchain just stores the data. But where is all the logic to buy, sell, cancel, refund etc. In Ethereum world, you write the application code (called contract) in a language called Solidity. You then use the solidity compiler to compile it to Ethereum Byte Code and then deploy that byte code to the blockchain. There are few other alternates to Solidity but Solidity is by far the most popular language for contract development.
+
+
+## Description of the Project
+
+* The authority must login first with the provided session ID. For now I have just created one admin with unique username and password.
 * The voter can now begin the process of voting with proper authentication through OTP(one time password) on the respective linked mobile number.
 * If the voter is valid then the system will check for for the voters age and the address to which he can give vote.
 * the voting pallete will be opned with  candidate names,their parties and logos.
 * Now the voter can give his vote by clicking vote button.
 * one voter can give his vote only once,i.e after one time voting buttons are disabled and the vote is automatically loged out.
 * Same process continiues for many more votters irrespective of their voting wards.
+* The front end involves Html and the backend is done in Nodejs and Firebase. The blockchain ethereum services used is ganache-cli. I haven't used any truffle framework.
 
 ### Installing and Running Project
 
 Clone Project
 ```
-git clone git@github.com:sanattaori/techdot.git && cd techdot
+git clone https://github.com/raghavaggarwal99/Blockchain.git && cd Blockchain
 ```
 Install Dependencies
 ```
@@ -46,10 +57,28 @@ Step 2 - Creating Voting Smart Contract
 ```
 npm install solc
 ```
+Step3- Setting connection with ethereum Blockchain services
 
-Replace your aadhaar no and phone number for running project at https://github.com/sanattaori/techdot/blob/7814403250f8b042992c6d437d9f9db8f98f3729/ui/js/app.js#L39
+This will list out the 10 accounts that are given in free in ganache-cli
+```
+node_modules/.bin/ganache-cli
+```
+* ![](https://github.com/raghavaggarwal99/Blockchain/screenshot/img1.PNG)
 
-Step 3 - Testing in node console
+Step 4- Compiling the contract
+
+```
+npm install solc@0.6.4
+node_modules/.bin/solcjs --bin --abi Voting.sol
+ls
+Voting.sol              Voting_sol_Voting.abi   Voting_sol_Voting.bin
+
+```
+When you compile the code successfully using the command above, the compiler outputs 2 files that are important to understand:
+1. **Voting_sol_Voting.bin** : This is the bytecode you get when the source code in Voting.sol is compiled. This is the code which will be deployed to the blockchain.
+2. **Voting_sol_Voting.abi** : This is an interface or template of the contract (called abi) which tells the contract user what methods are available in the contract. Whenever you have to interact with the contract in the future, you will need this abi definition. You can read more details about ABI here
+
+Step 5 - Testing in node console
 
 Not required just for testing in node console-
 After writing our smart contract, we'll use Web3js to deploy our app and interact with it
@@ -62,44 +91,34 @@ Then ensure Web3js is initalized and can query all accounts on the blockchain
 > web3.eth.accounts
 Lastly, compile the contract by loading the code from Voting.sol in to a string variable and compiling it
 
-> code = fs.readFileSync('Voting.sol').toString()
-> solc = require('solc')
-> compiledCode = solc.compile(code)
+> bytecode = fs.readFileSync('Voting_sol_Voting.bin').toString()
+> abi = JSON.parse(fs.readFileSync('Voting_sol_Voting.abi').toString())
+> deployedContract = new web3.eth.Contract(abi)
+> listOfCandidates = ['Rama', 'Nick', 'Jose']
+> deployedContract.deploy({
+  data: bytecode,
+  arguments: [listOfCandidates.map(name => web3.utils.asciiToHex(name))]
+}).send({
+  from: 'ENTER 1 OF 10 ACCOUNT ADDRESSES like 0xfb3....',
+  gas: 1500000,
+  gasPrice: web3.utils.toWei('0.00003', 'ether')
+}).then((newContractInstance) => {
+  deployedContract.options.address = newContractInstance.options.address
+  console.log(newContractInstance.options.address)
+});
+
 ```
 testrpc creates 10 test accounts to play with automatically. These accounts come preloaded with 100 (fake) ethers.
 
 Deploy the contract!
 
-dCode.contracts[‘:Voting’].bytecode: bytecode which will be deployed to the blockchain.
-compiledCode.contracts[‘:Voting’].interface: interface of the contract (called abi) which tells the contract user what methods are available in the contract.
-```
-> abiDefinition = JSON.parse(compiledCode.contracts[':Voting'].interface)
-> VotingContract = web3.eth.contract(abiDefinition)
-> byteCode = compiledCode.contracts[':Voting'].bytecode
->deployedContract = VotingContract.new(['Sanat','Aniket','Mandar','Akshay'],{data: byteCode, from: web3.eth.accounts[0], gas: 4700000})
-> deployedContract.address
-> contractInstance = VotingContract.at(deployedContract.address)
-deployedContract.address. When you have to interact with your contract, you need this deployed address and abi definition we talked about earlier.
-```
+
 Step 4 - Interacting with the Contract via the Nodejs Console
-```
-> contractInstance.totalVotesFor.call('Sanat').toLocaleString()
-'2'
-```
 
-### For TypeError: Cannot read property ':Voting' of undefined :
-Make sure you have ganache-cli
 ```
-sudo npm install ganache-cli -g
+> deployedContract.methods.totalVotesFor(web3.utils.asciiToHex('Sanat')).call(console.log)
+> deployedContract.methods.voteForCandidate(web3.utils.asciiToHex('Sanat')).send({from: 'YOUR ACCOUNT ADDRESS'}).then((f) => console.log(f))
 ```
-copy address of first account
-```
-$ ganache-cli
-```
-Paste this adderess to 
-ui/js/clist.js line 17
-https://github.com/sanattaori/techdot/blob/cecabc1917965ed7404e4c444b7572c97e10dcf9/ui/js/clist.js#L17
-
 
 ### Purpose of test
 
@@ -108,12 +127,7 @@ https://github.com/sanattaori/techdot/blob/cecabc1917965ed7404e4c444b7572c97e10d
  * button disabling and automatic logout is to prevent multiple voting by single candidate. 
 
 ### Screenshots
-* ![](https://raw.githubusercontent.com/sanattaori/techdot/master/screenshot/1.PNG)
-* ![](https://raw.githubusercontent.com/sanattaori/techdot/master/screenshot/2.PNG)
-* ![](https://raw.githubusercontent.com/sanattaori/techdot/master/screenshot/3.PNG)
-* ![](https://raw.githubusercontent.com/sanattaori/techdot/master/screenshot/4.PNG)
-* ![](https://raw.githubusercontent.com/sanattaori/techdot/master/screenshot/5.PNG)
-* ![](https://raw.githubusercontent.com/sanattaori/techdot/master/screenshot/gan.PNG)
+*![](https://github.com/raghavaggarwal99/Blockchain/screenshot/img1.PNG)
 
 ## Deployment
 
