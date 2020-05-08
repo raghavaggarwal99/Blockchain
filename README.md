@@ -120,6 +120,8 @@ Step 6 - Interacting with the Contract via the Nodejs Console
 > deployedContract.methods.totalVotesFor(web3.utils.asciiToHex('Sanat')).call(console.log)
 > deployedContract.methods.voteForCandidate(web3.utils.asciiToHex('Sanat')).send({from: 'YOUR ACCOUNT ADDRESS'}).then((f) => console.log(f))
 ```
+Given below shows the transaction hash and the increase in vote of that particular candidate.
+
 ![](screenshots/img2.png)
 
 ### Purpose of test
